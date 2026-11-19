@@ -1,6 +1,12 @@
-require('dotenv').config({
-  path: require('path').resolve(__dirname, '../.env')
-});
+const path = require('path');
+const dotenv = require('dotenv');
+
+// Muat .env dari beberapa lokasi yang mungkin (nilai yang sudah terisi tidak ditimpa).
+// 1) satu folder di atas server.js  -> backend/.env   (kalau server.js ada di backend/src)
+// 2) folder yang sama dengan server.js -> backend/.env (kalau server.js ada di backend/)
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+dotenv.config({ path: path.resolve(__dirname, './.env') });
+
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -23,6 +29,7 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/products', require('./routes/products'));
+app.use('/api/enhance', require('./routes/enhance')); // <-- BARIS BARU
 
 app.use((req, res) => res.status(404).json({ message: 'Endpoint tidak ditemukan' }));
 
@@ -33,9 +40,10 @@ app.use((err, req, res, next) => {
     return res.status(400).json({ message: msg });
   }
   if (err.status === 400) return res.status(400).json({ message: err.message });
-  console.error(err);
+  console.error('ERROR SERVER:', err); // error asli muncul di terminal backend
   res.status(500).json({ message: 'Terjadi kesalahan pada server' });
 });
 
-const PORT = process.env.PORT || 3000;
+// Default 4000 supaya tidak bentrok dengan frontend Next.js (port 3000)
+const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Server jalan di http://localhost:${PORT}`));
